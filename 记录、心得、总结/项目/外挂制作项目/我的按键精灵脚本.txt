@@ -1,0 +1,23 @@
+//SetSimMode 2
+//For i=1 To 6
+   intX = 0
+intY = 0
+While intX <= 0 And intY <= 0
+    FindPic 594,373,606,406,"Attachment:\zhengmian3.bmp",1,intX,intY
+Wend
+MoveTo intX, intY
+LeftClick 1
+//Delay 6000
+//MoveTo 595, 389
+//LeftClick 1
+//Delay 1000
+//Next
+
+
+
+//550,395,585,440
+
+//525,375,560,430
+
+//540,355,600,450
+

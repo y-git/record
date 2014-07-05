@@ -1,0 +1,233 @@
+1、可以通过如
+var object = $('<span class="slow"></span>').appendTo(Snake.$map);
+来绑定dom元素，然后设置object，如object.css等，就可以设置绑定的dom元素（此处为“<span class="slow"></span>”）。
+
+
+2、将window.setTimeout函数加入{}或数组中时，window.setTimeout函数会自动执行。
+
+
+3、禁止方向键控制滚动条滚动：
+
+			//非ie浏览器禁止方向键控制滚动条滚动
+                        (!$.browser.msie && e.preventDefault());
+                        //ie浏览器禁止方向键控制滚动条滚动
+                        if ($.browser.msie) {
+                            e.returnValue = false;
+                        }
+
+
+4、不能写成属性，这样的话MySnakeGame.Starting = 1;就相当于把原来的Starting属性覆盖为1了。
+
+
+//不能写成属性，这样的话MySnakeGame.Starting = 1;就相当于把原来的Starting属性覆盖为1了，
+            //并没有实现Snake.start = 1的效果！
+//            Starting:  Snake.start
+               
+            Starting: function () {
+                Snake.start = 1;
+            }
+
+
+
+5、“window.setTimeout(NewGame, 3000)”会造成NewGame(reset)的形参reset不为undefined，而为一个数字。
+
+/* 这种写法，会造成NewGame(reset)的形参reset不为undefined，而为一个数字（为什么是数字？）
+                window.setTimeout(NewGame, 3000);
+                */
+
+改为：
+
+window.setTimeout(function () { NewGame(); }, 3000);
+
+
+6、MovingWall的局部变量对window.setInterval来说相当于全局变量，且由于是闭包，可以保存对MovingWall的局部变量的修改。如window.setInterval里面的l和left等可以累加或累减。
+
+
+ MovingWall: function (wall) {
+                    var c = 0, t, l, n, timer, left = 0, temp, object = null
+                    direction = 1;  //最开始向右移
+
+                    t = wall.top;
+
+                    l = wall.left;
+                    temp = wall.left;
+
+                    object = $('<span class="wall"></span>').appendTo(Snake.$map);
+
+                    //墙移动的范围内都先加入到坐标对象中（设为"movingWall"），这样可防止道具或事物产生在墙移动的范围中
+                    for (n = 0; n < wall.seg; n++) {
+                        AddPosition(Snake.Left + temp, Snake.Top + t, "movingWall");
+
+                        object.left = Snake.Left + l;
+                        object.top = Snake.Top + t;
+
+                        Snake.wallseg.push(object);
+
+                        temp += Snake.TD;
+                    }
+
+
+                    //MovingWall的局部变量对window.setInterval来说相当于全局变量，
+                    //且由于是闭包，可以保存对MovingWall的局部变量的修改。
+                    //如window.setInterval里面的l和left等可以累加或累减。
+                    Snake.$movingWall.push(window.setInterval(function () {
+                        object.css({ top: Snake.Top + t + "px", left: Snake.Left + l + "px" })
+                        object.left = Snake.Left + l;
+                        object.top = Snake.Top + t;
+
+                        //将墙的坐标设为"wall"
+                        AddPosition(Snake.Left + l, Snake.Top + t, "wall");
+
+                        if (left == wall.seg && direction == 1) {   //如果向右移动到最大，则反向
+                            direction = -1; //方向改为向左
+                        }
+                        else if (left == 0 && direction == -1) {    //如果向左移动到最小，则反向
+                            direction = 1;  //方向改为向右
+                        }
+
+
+                        if (direction == 1) {
+                            left++;
+                            l += Snake.TD;
+                        }
+                        else {
+                            left--;
+                            l -= Snake.TD;
+                        }
+
+                    }, 100));
+                },
+
+
+7、for (... in ... )用于Object对象时，如果该对象为{}，即为空对象，则for中的代码不执行，即：
+
+for (var i in {}){
+	alert("for");		//不执行！
+} 
+
+如果用于数组，如果该数组为空数组，则for中的代码要执行！！！即：则
+
+for (var i in []){
+	alert("for");		//for
+} 
+
+
+
+
+
+8、setTimeout中的递归调用（我写的！！）。
+
+
+Snake.$propFunc.push(window.setTimeout(function PropTime() {
+
+                    //如果当前状态为暂停，则PropTime本次不执行，
+                    //延迟到randomNum(time_over, time_under)时间后再执行。
+                    //使用递归实现。
+                    if (Snake.stop == 1) {
+                        Snake.$propFunc.push(window.setTimeout(function () { PropTime(); }, randomNum(time_over, time_under)));
+
+                        return;
+                    }
+                    name = _name + k.toString();
+
+                    object = $('<span class="' + _name + '"></span>').appendTo(Snake.$map); //类名还是用原始的_name
+                    
+			。。。。。。
+
+
+注意递归调用的方式！
+
+
+
+
+已解决的问题：
+
+1、如何判断按键间隔，并阻止间隔小于50ms的操作？？？？
+
+解决方案：
+
+用Snake.date来实现！！
+
+MySnakeGame.js:
+
+if (Snake.date) {
+                    new_date = new Date();
+                    interval = new_date.getTime() - Snake.date.getTime();   //与上次按键的间隔
+                    if (interval < 3000/(Snake.speed + 10)){
+                        return false;
+                    }
+                }
+
+                Snake.date = new Date();    //保存本次按键时间，用于计算两次按键时间的间隔
+
+
+
+
+2、html的span元素，设置width和height不起作用。
+
+
+原因分析：
+
+查看CSS文档得知，浏览器会忽略行内元素（inline，或称：内联元素）的width属性。 
+
+
+解决方案：
+
+一、用display:block来使span变为块级元素。
+
+二、加上position:absolute也可以。
+
+
+
+
+
+
+
+未解决的问题：
+
+1、setInterval的间隔如果设得太小，会出问题。
+
+问题描述：
+
+移动墙：
+
+Snake.$movingWall.push(window.setInterval(function () {
+                        temp = wall.left;
+
+                        object.css({ top: Snake.Top + t + "px", left: Snake.Left + l + "px" })
+                        object.left = Snake.Left + l;
+                        object.top = Snake.Top + t;
+
+                        //将墙的坐标设为"wall"
+                        AddPosition(Snake.Left + l, Snake.Top + t, "wall");
+                        if (left == wall.seg && direction == 1) {   //如果向右移动到最大，则反向
+                            direction = -1; //方向改为向左
+                        }
+                        else if (left == 0 && direction == -1) {    //如果向左移动到最小，则反向
+                            direction = 1;  //方向改为向右
+                        }
+
+
+                        if (direction == 1) {
+                            //将上一个位置的坐标设为"movingWall"
+                            left !== 0 && AddPosition(Snake.Left + l - Snake.TD, Snake.Top + t, "movingWall");
+
+
+                            left++;
+
+                            l += Snake.TD;
+                        }
+                        else {
+                            //将上一个位置的坐标设为"movingWall"
+                            left !== wall.seg && AddPosition(Snake.Left + l + Snake.TD, Snake.Top + t, "movingWall");
+
+                            left--;
+                            l -= Snake.TD;
+                        }
+                        //时间不能小于100ms。否则如果在游戏时就可能造成蛇可以穿过移动墙！
+                        //为什么？？？
+                    }, wall.time));  
+
+如果wall.time小于100ms，则会出问题！！！
+
+为什么？？？？？

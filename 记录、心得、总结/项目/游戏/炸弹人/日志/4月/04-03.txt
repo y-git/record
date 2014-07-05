@@ -1,0 +1,160 @@
+今日计划：
+
+1、显示地图（空地、砖墙）。
+
+2、重构架构、代码。
+
+
+
+
+
+
+完成内容：
+
+1、用createPattern显示地图（空地）
+
+2、将空地加到Layer中，统一显示
+
+
+
+明日计划：
+
+
+
+
+
+
+
+难点：
+
+
+
+
+
+
+
+
+已解决的问题及解决方案：
+
+1、测试：showMapSpec.js -> 画出空地 中“spyOn(showMap.context, "drawImage")”无效！
+
+
+问题描述
+
+
+原因分析：
+
+
+
+因为测试时，在showMap.js -> init中context每次都是新建的，所以“spyOn(showMap.context, "drawImage")”实际上监视的是好没有创建的context（null），而在调用“showMap.init();”后才创建context。
+
+
+
+解决方案
+
+将showMap -> init中的“this.context = canvas.getContext("2d");”放到_getContext方法中，从而在测试中能够替换_getContext：
+
+原来的_getContext:
+
+
+    _getContext: function (canvas) {
+            this.context = canvas.getContext("2d");
+        }
+
+
+
+替换：
+
+
+                spyOn(showMap, "_getContext").andCallFake(function (canvas) {
+                    showMap.context = canvas.getContext("2d");
+                    spyOn(showMap.context, "drawImage");
+                });
+
+
+
+
+
+
+2、图片加载完毕后，再调用get获取图片，返回null！
+
+
+问题描述
+
+测试：showMapSpec.js -> 画出空地 中延迟500ms中的expect(showMap.context.drawImage).toHaveBeenCalledWith(showMap.imgLoader.get("ground"), 0, 0);
+
+imgLoader.get("ground")返回null！
+
+
+
+
+
+原因分析
+
+这是因为在PreLoadImg.js中，加载完毕后调用的onload中调用了dispose，导致_imgs为空，从而get获取不到！
+
+
+
+
+
+
+解决方案
+
+修改PreLoadImg.js onload：
+
+PreLoadImg.js 
+
+        onload: function (i) {
+            clearTimeout(this.timerID);
+            this.currentLoad++;
+            this.config.onstep(this.currentLoad, this.imgCount);
+
+            if (this.currentLoad === this.imgCount) {
+                this.config.onload(this.currentLoad);
+                //this.dispose();   //如果加载完毕后调用dispose，则加载完毕后_imgs就为空了！（用get获取不到了！）
+            }
+        },
+
+
+
+
+
+
+已解决但不知道原因的问题：
+
+
+
+
+
+
+
+
+未解决的问题：
+
+
+
+
+
+
+
+
+
+
+
+注意事项：
+
+
+
+
+
+
+
+
+
+
+补充说明：
+
+
+
+
+

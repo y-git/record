@@ -1,0 +1,185 @@
+        $('input[type=radio].star').rating({
+            callback: function(value, link){
+                $("#myComment_score").val(link.title);      //将选中的值赋给隐藏域
+            },
+            index: 0, 	//title的起始值
+            read: false //将readOnly改为read
+            });
+
+
+要这样把选中值赋给一个隐藏域，
+然后获的值：
+var score = var score = parseFloat(($("#myComment_score").val() * 1.0).toFixed(1)); 
+ //从隐藏域中得到选中值,保留小数点一位,用parseFloat转换为浮点数;  //从隐藏域中得到选中值,保留小数点一位,用parseFloat转换为浮点数
+
+
+
+
+
+
+Star_rating.ascx:
+
+
+
+
+<%@ Control Language="C#" Inherits="System.Web.Mvc.ViewUserControl" %>
+          <div style="border:1px solid red;display: -moz-inline-stack;display: inline-block;*display: inline;zoom: 1;vertical-align:top;">
+                                            
+
+                     <%-- 10个input，用{split:2}可精确到0.5--%>
+<input name="comment_star" type="radio" class="star {split:10}" />
+<input name="comment_star" type="radio" class="star {split:10}" />
+<input name="comment_star" type="radio" class="star {split:10}"/>
+<input name="comment_star" type="radio" class="star {split:10}"/>
+<input name="comment_star" type="radio" class="star {split:10}"/>
+
+<input name="comment_star" type="radio" class="star {split:10}"/>
+<input name="comment_star" type="radio" class="star {split:10}"/>
+<input name="comment_star" type="radio" class="star {split:10}"/>
+<input name="comment_star" type="radio" class="star {split:10}"/>
+<input name="comment_star" type="radio" class="star {split:10}"/>
+
+
+
+<input name="comment_star" type="radio" class="star {split:10}"/>
+<input name="comment_star" type="radio" class="star {split:10}" />
+<input name="comment_star" type="radio" class="star {split:10}"/>
+<input name="comment_star" type="radio" class="star {split:10}"/>
+<input name="comment_star" type="radio" class="star {split:10}"/>
+
+<input name="comment_star" type="radio" class="star {split:10}"/>
+<input name="comment_star" type="radio" class="star {split:10}"/>
+<input name="comment_star" type="radio" class="star {split:10}"/>
+<input name="comment_star" type="radio" class="star {split:10}"/>
+<input name="comment_star" type="radio" class="star {split:10}"/>
+
+
+
+<input name="comment_star" type="radio" class="star {split:10}"/>
+<input name="comment_star" type="radio" class="star {split:10}" />
+<input name="comment_star" type="radio" class="star {split:10}"/>
+<input name="comment_star" type="radio" class="star {split:10}"/>
+<input name="comment_star" type="radio" class="star {split:10}"/>
+
+<input name="comment_star" type="radio" class="star {split:10}"/>
+<input name="comment_star" type="radio" class="star {split:10}"/>
+<input name="comment_star" type="radio" class="star {split:10}"/>
+<input name="comment_star" type="radio" class="star {split:10}"/>
+<input name="comment_star" type="radio" class="star {split:10}"/>
+
+
+
+<input name="comment_star" type="radio" class="star {split:10}"/>
+<input name="comment_star" type="radio" class="star {split:10}" />
+<input name="comment_star" type="radio" class="star {split:10}"/>
+<input name="comment_star" type="radio" class="star {split:10}"/>
+<input name="comment_star" type="radio" class="star {split:10}"/>
+
+<input name="comment_star" type="radio" class="star {split:10}"/>
+<input name="comment_star" type="radio" class="star {split:10}"/>
+<input name="comment_star" type="radio" class="star {split:10}"/>
+<input name="comment_star" type="radio" class="star {split:10}"/>
+<input name="comment_star" type="radio" class="star {split:10}"/>
+
+
+
+<input name="comment_star" type="radio" class="star {split:10}"/>
+<input name="comment_star" type="radio" class="star {split:10}" />
+<input name="comment_star" type="radio" class="star {split:10}"/>
+<input name="comment_star" type="radio" class="star {split:10}"/>
+<input name="comment_star" type="radio" class="star {split:10}"/>
+
+<input name="comment_star" type="radio" class="star {split:10}"/>
+<input name="comment_star" type="radio" class="star {split:10}"/>
+<input name="comment_star" type="radio" class="star {split:10}"/>
+<input name="comment_star" type="radio" class="star {split:10}"/>
+<input name="comment_star" type="radio" class="star {split:10}"/>
+                                                </div>
+
+
+<% decimal score = Convert.ToDecimal(ViewData["Score"]); %>
+
+<input type="hidden" id="myComment_score" />
+
+                                                <%--初始化企业得分--%>
+<script type="text/javascript">
+    $(function () {
+        //        alert("sss");
+        var score = <%= score %>;
+        var select = score * 10 - 1;
+//        var i = 10;
+        //        $("input[name=comment_star]").eq(i).attr("checked", true);    //无效，要调用插件的api选择！
+//        $('input[type=radio].star').rating({index: 0, read: false});
+
+        $('input[type=radio].star').rating({
+            callback: function(value, link){
+                $("#myComment_score").val(link.title);      //将选中的值赋给隐藏域
+            },
+            index: 0, 
+            read: false //将readOnly改为read
+            });
+// $('input[type=radio].star').rating({index: 0, read: false});
+//        alert($('input[type=radio].star').rating("returnValue"));
+        //        value: 5,   //增加score值
+        //        readOnly: true,   //增加readOnly
+        $('input[name=comment_star]').rating('select', select);
+//        alert(parseInt($("input[name='comment_star']:checked").val()));   //取不到值！
+
+        /*这个要放在select后面，否则select无效！因为源码中设定为：if (control.readOnly) return;
+        我已注释了这句话，现在可以放在select前面了！*/
+//        $("input[name=comment_star]").rating('readOnly', true);
+
+
+
+
+        //        alert("ttt");
+        //        var i = 0;
+        //        $("input[name=comment_star]").eq(i).attr("checked", true);
+        //        
+        //        if (score > 0 && score <= 0.5){
+        //            $("input[name=comment_star]").eq(0).attr("checked", true);
+        //        }
+        //        else if (score > 0.5 && score <= 1){
+        //            $("input[name=comment_star]").eq(1).attr("checked", true);
+        //        }
+        //        else if (score > 1 && score <= 1.5){
+        //            $("input[name=comment_star]").eq(2).attr("checked", true);
+        //        }
+        //        else if (score > 1.5 && score <= 2){
+        //            $("input[name=comment_star]").eq(3).attr("checked", true);
+        //        }
+        //        else if (score > 2 && score <= 2.5){
+        //            $("input[name=comment_star]").eq(4).attr("checked", true);
+        //        }
+        //        else if (score > 2.5 && score <= 3){
+        //            $("input[name=comment_star]").eq(5).attr("checked", true);
+        //        }
+        //        else if (score > 3 && score <= 3.5){
+        //            $("input[name=comment_star]").eq(6).attr("checked", true);
+        //        }
+        //        else if (score > 3.5 && score <= 4){
+        //            $("input[name=comment_star]").eq(7).attr("checked", true);
+        //        }
+        //        else if (score > 4 && score <= 4.5){
+        //            $("input[name=comment_star]").eq(8).attr("checked", true);
+        //        }
+        //        else if (score > 4.5 && score <= 5){
+        //            $("input[name=comment_star]").eq(9).attr("checked", true);
+        //        }
+
+    });
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+

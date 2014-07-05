@@ -1,0 +1,876 @@
+/****************************************************
+
+历年出生缺陷年龄分布情况的存储过程
+
+***********************************************/
+
+create or replace
+procedure Search_History_BornAge(yearstar in varchar,yearend in varchar,abortion out integer,age0 out integer,age1 out integer,age5 out integer,age10 out integer,age11 out integer,agenull out integer,total out integer,total7 out integer)
+as
+begin
+/**************统计引产儿数量 *************/
+  select count(child_name) into abortion from standard_child_view where (Add_time >= to_date(yearstar,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss')) and shift = 3 and (diagnosis_type = 2 or diagnosis_type = 3);
+/**************统计7天及以内数量 x<=7天*************/
+  select count(child_name) into age0 from standard_sick_info where (Add_time >= to_date(yearstar,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss')) and regexp_like(diagnosis_age,'生后0+岁0+月0*[0-7]天') and (diagnosis_type = 2 or diagnosis_type = 3);
+/**************统计7天-1岁数量  1岁>= x >7天,以下类似 *************/
+  select count(child_name) into age1 from standard_sick_info where (Add_time >= to_date(yearstar,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss')) and regexp_like(diagnosis_age,'生后0+岁0+月0*[8-9]天|生后0+岁0+月0*[1-9][0-9]天|生后0*1岁0+月0+天') and (diagnosis_type = 2 or diagnosis_type = 3);
+/**************统计1岁-5岁数量 *************/
+  select count(child_name) into age5 from standard_sick_info where (Add_time >= to_date(yearstar,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss')) and regexp_like(diagnosis_age,'生后0*1岁0*[1-9][0-2]?月|生后0*1岁0+月0*[1-3][0-9]?天|生后0*[2-4]岁|生后0*5岁0+月0+天') and (diagnosis_type = 2 or diagnosis_type = 3);
+/**************统计5岁-10岁数量 *************/
+  select count(child_name) into age10 from standard_sick_info where (Add_time >= to_date(yearstar,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss')) and regexp_like(diagnosis_age,'生后0*5岁0*[1-9][0-2]?月|生后0*5岁0+月0*[1-3][0-9]?天|生后0*[6-9]岁|生后0*10岁0+月0+天') and (diagnosis_type = 2 or diagnosis_type = 3);
+/**************统计10岁以上数量 *************/
+  select count(child_name) into age11 from standard_sick_info where (Add_time >= to_date(yearstar,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss')) and regexp_like(diagnosis_age,'生后0*10岁0*[1-9][0-2]?月|生后0*10岁0+月0*[1-3][0-9]?天|生后0*1[1-9]|生后0*[2-9]\d') and (diagnosis_type = 2 or diagnosis_type = 3); 
+/**************统计不详的数量 *************/
+  select count(child_name) into agenull from standard_sick_info where (Add_time >= to_date(yearstar,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss')) and (diagnosis_age is null) and (diagnosis_type = 2 or diagnosis_type = 3);
+/**************计算合计数量 *************/
+  total := abortion + age0 + age1 + age5 + age10 + age11 + agenull;
+/**************计算7天以上的数量 *************/
+  total7 := age1 + age5 + age10 + age11;
+end Search_History_BornAge;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/****************************************************
+
+历年出生缺陷户籍分布情况的存储过程
+
+***********************************************/
+
+
+
+create or replace
+procedure Search_History_BornRegister(yearstart in varchar,yearend in varchar,yes_18 out integer,no_18 out integer,yes_7 out integer,no_7 out integer,total_18 out integer,total_7 out integer)
+as
+begin
+  
+  select count(Child_name) into yes_18 from standard_child_view where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and Family_register = '本市' and regexp_like(diagnosis_age,'生后0*[0-9]岁|生后0*1[0-7]|生后0*18岁0+月0+天');
+  select count(Child_name) into no_18 from standard_child_view where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and Family_register = '非本市' and regexp_like(diagnosis_age,'生后0*[0-9]岁|生后0*1[0-7]|生后0*18岁0+月0+天');
+  select count(Child_name) into yes_7 from standard_child_view where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and Family_register = '本市' and regexp_like(diagnosis_age,'生后0+岁0+月0*[0-7]天');
+  select count(Child_name) into no_7 from standard_child_view where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and Family_register = '非本市' and regexp_like(diagnosis_age,'生后0+岁0+月0*[0-7]天');
+  
+  total_18 := yes_18 + no_18;
+  total_7 := yes_7 + no_7;
+  
+end Search_History_BornRegister;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/****************************************************
+
+历年患儿信息数量统计的存储过程
+
+***********************************************/
+
+
+
+create or replace
+procedure Search_History_Children(yearstart in varchar,yearend in varchar,a1 out number,a2 out number,a3 out number,a4 out number,b1 out number,b2 out number,b3 out number)
+as
+  more1 number default 0;
+  more2 number default 0;
+  more3 number default 0;
+  more4 number default 0;
+  year1 varchar(25);
+  year2 varchar(25);
+  year3 varchar(25);
+  year4 varchar(25);
+  year5 varchar(25);
+  year6 varchar(25);
+  yearvalue varchar(25);
+begin
+  yearvalue := substr(yearend,1,4);
+  year1 := concat(substr(yearstart,1,4),'-12-31 00:00:00');
+  year2 := concat(yearvalue,'-01-01 00:00:00');
+  year3 := concat(yearvalue,'-03-31 00:00:00');
+  year4 := concat(yearvalue,'-04-01 00:00:00');
+  year5 := concat(yearvalue,'-06-30 00:00:00'); 
+  year6 := concat(yearvalue,'-07-01 00:00:00');
+  
+  select count(Child_name) into a1 from child_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(year1,'yyyy-mm-dd hh24:mi:ss');
+  select count(Child_name) into a2 from child_sick_info where Add_time >= to_date(year2,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(year3,'yyyy-mm-dd hh24:mi:ss');
+  select count(Child_name) into a3 from child_sick_info where Add_time >= to_date(year4,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(year5,'yyyy-mm-dd hh24:mi:ss');
+  select count(Child_name) into a4 from child_sick_info where Add_time >= to_date(year6,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss');
+--修改，加入temp_2.Add_time...
+  select count(Child_name) into more1 from standard_sick_info temp where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(year1,'yyyy-mm-dd hh24:mi:ss') and not exists(select temp_2.group_num from child_sick_info temp_2 where temp_2.group_num = temp.group_num and temp_2.Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and temp_2.Add_time <= to_date(year1,'yyyy-mm-dd hh24:mi:ss'));
+  select count(Child_name) into more2 from standard_sick_info temp where Add_time >= to_date(year2,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(year3,'yyyy-mm-dd hh24:mi:ss') and not exists(select temp_2.group_num from child_sick_info temp_2 where temp_2.group_num = temp.group_num and temp_2.Add_time >= to_date(year2,'yyyy-mm-dd hh24:mi:ss') and temp_2.Add_time <= to_date(year3,'yyyy-mm-dd hh24:mi:ss'));
+  select count(Child_name) into more3 from standard_sick_info temp where Add_time >= to_date(year4,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(year5,'yyyy-mm-dd hh24:mi:ss') and not exists(select temp_2.group_num from child_sick_info temp_2 where temp_2.group_num = temp.group_num and temp_2.Add_time >= to_date(year4,'yyyy-mm-dd hh24:mi:ss') and temp_2.Add_time <= to_date(year5,'yyyy-mm-dd hh24:mi:ss'));
+  select count(Child_name) into more4 from standard_sick_info temp where Add_time >= to_date(year6,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and not exists(select temp_2.group_num from child_sick_info temp_2 where temp_2.group_num = temp.group_num and temp_2.Add_time >= to_date(year6,'yyyy-mm-dd hh24:mi:ss') and temp_2.Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss'));
+  
+  a1 := a1 + more1;
+  a2 := a2 + more2;
+  a3 := a3 + more3;
+  a4 := a4 + more4;
+  
+  b1 := a1 + a2 + a3 + a4;
+  
+  select count(Child_name) into b3 from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss');
+  
+  b2 := b1 - b3;
+end Search_History_Children;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/****************************************************
+
+申明oracle复合数据类型，注意要逐行执行！
+
+***********************************************/
+
+
+
+CREATE   OR   REPLACE   TYPE   table_sort   is table   of  integer;
+
+
+CREATE   OR   REPLACE   TYPE   table_sort_name   is table   of  varchar(50);
+
+
+CREATE   OR   REPLACE   TYPE   totaldefect   is table   of   integer;
+
+
+CREATE   OR   REPLACE   TYPE   totaldefect_name   is table   of  varchar(50) ;
+
+
+
+
+/****************************************************
+
+历年出生缺陷顺位统计的存储过程
+
+***********************************************/
+
+
+
+create or replace
+procedure Search_History_DefectSort(yearstart in varchar, yearend in varchar, top10_num out table_sort, top10_name out table_sort_name, total out number)
+is
+  totaltable totaldefect;
+  total_name totaldefect_name;
+  i int := 1;
+  j int := 1;
+  t int := 1;
+ -- t1 int := 1;
+  a int := 0;
+  temp int := 0;
+ -- a1 integer := 0;
+begin
+  totaltable := totaldefect();
+  total_name := totaldefect_name();
+  top10_num := table_sort();
+  top10_name := table_sort_name();
+  top10_name.extend(10);
+ top10_num.extend(10);
+ totaltable.extend(30);
+ total_name.extend(30);
+
+--嵌套表要初始化
+/* 使用集合之前必须要初始化，对于Index_by表初始化是自动进行的，但是对于嵌套表和VARRAY就必须使用内建的构造函数。
+如果重新调用，嵌套表和VARRAY自动置NULL，这不只是元素置NULL，而是整个集合置NULL。给集合内的元素赋值需要使用下标符号。
+将一个集合的值赋给另一个集合，只需要简单的使用赋值操作符。
+ */
+ for i in 1..30 loop
+  totaltable(i) := 0;
+ -- total_name(i) := '';
+ end loop;
+--totaltable(9) := 0;
+
+--统计本年度总数 主要要是缺陷儿（diagnosis_type = 2 or diagnosis_type = 3）！
+ select count(Child_name) into total from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and (diagnosis_type = 2 or diagnosis_type = 3);
+
+--oracle数组下标从1开始
+ select count(Child_name) into totaltable(1) from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and (first_diagnosis = '无脑畸形' or second_diagnosis = '无脑畸形' or third_diagnosis = '无脑畸形');
+ select count(Child_name) into totaltable(2) from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and (first_diagnosis = '马蹄内翻足左' or second_diagnosis = '马蹄内翻足左' or third_diagnosis = '马蹄内翻足左');
+ select count(Child_name) into totaltable(3) from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and (first_diagnosis = '马蹄内翻足右' or second_diagnosis = '马蹄内翻足右' or third_diagnosis = '马蹄内翻足右');
+ select count(Child_name) into totaltable(4) from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and (first_diagnosis = '脊柱裂' or second_diagnosis = '脊柱裂' or third_diagnosis = '脊柱裂');
+ select count(Child_name) into totaltable(5) from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and (first_diagnosis = '多指左' or second_diagnosis = '多指左' or third_diagnosis = '多指左');
+ select count(Child_name) into totaltable(6) from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and (first_diagnosis = '多指右' or second_diagnosis = '多指右' or third_diagnosis = '多指右');
+ select count(Child_name) into totaltable(7) from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and (first_diagnosis = '脑膨出' or second_diagnosis = '脑膨出' or third_diagnosis = '脑膨出');
+ select count(Child_name) into totaltable(8) from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and (first_diagnosis = '并指左' or second_diagnosis = '并指左' or third_diagnosis = '并指左');
+ select count(Child_name) into totaltable(9) from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and (first_diagnosis = '并指右' or second_diagnosis = '并指右' or third_diagnosis = '并指右');
+ select count(Child_name) into totaltable(10) from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and (first_diagnosis = '先天性脑积水' or second_diagnosis = '先天性脑积水' or third_diagnosis = '先天性脑积水');
+ select count(Child_name) into totaltable(11) from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and (first_diagnosis = '左上肢缩短' or second_diagnosis = '左上肢缩短' or third_diagnosis = '左上肢缩短');
+ select count(Child_name) into totaltable(12) from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and (first_diagnosis = '右上肢缩短' or second_diagnosis = '右上肢缩短' or third_diagnosis = '右上肢缩短');
+ select count(Child_name) into totaltable(13) from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and (first_diagnosis = '左下肢缩短' or second_diagnosis = '左下肢缩短' or third_diagnosis = '左下肢缩短');
+ select count(Child_name) into totaltable(14) from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and (first_diagnosis = '右下肢缩短' or second_diagnosis = '右下肢缩短' or third_diagnosis = '右下肢缩短');
+ select count(Child_name) into totaltable(15) from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and (first_diagnosis = '腭裂' or second_diagnosis = '腭裂' or third_diagnosis = '腭裂');
+ select count(Child_name) into totaltable(16) from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and (first_diagnosis = '唇裂' or second_diagnosis = '唇裂' or third_diagnosis = '唇裂');
+ select count(Child_name) into totaltable(17) from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and (first_diagnosis = '唇裂合并腭裂' or second_diagnosis = '唇裂合并腭裂' or third_diagnosis = '唇裂合并腭裂');
+ select count(Child_name) into totaltable(18) from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and (first_diagnosis = '先天性膈疝' or second_diagnosis = '先天性膈疝' or third_diagnosis = '先天性膈疝');
+ select count(Child_name) into totaltable(19) from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and (first_diagnosis = '小耳(包括无耳)' or second_diagnosis = '小耳(包括无耳)' or third_diagnosis = '小耳(包括无耳)');
+ select count(Child_name) into totaltable(20) from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and (first_diagnosis = '脐膨出' or second_diagnosis = '脐膨出' or third_diagnosis = '脐膨出');
+ select count(Child_name) into totaltable(21) from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and (first_diagnosis = '外耳其他畸形' or second_diagnosis = '外耳其他畸形' or third_diagnosis = '外耳其他畸形');
+ select count(Child_name) into totaltable(22) from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and (first_diagnosis = '腹烈' or second_diagnosis = '腹烈' or third_diagnosis = '腹烈');
+ select count(Child_name) into totaltable(23) from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and (first_diagnosis = '食道闭锁或狭窄' or second_diagnosis = '食道闭锁或狭窄' or third_diagnosis = '食道闭锁或狭窄');
+ select count(Child_name) into totaltable(24) from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and (first_diagnosis = '联体双胎' or second_diagnosis = '联体双胎' or third_diagnosis = '联体双胎');
+ select count(Child_name) into totaltable(25) from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and (first_diagnosis = '直肠肛门闭锁或狭窄(包括无肛)' or second_diagnosis = '直肠肛门闭锁或狭窄(包括无肛)' or third_diagnosis = '直肠肛门闭锁或狭窄(包括无肛)');
+ select count(Child_name) into totaltable(26) from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and (first_diagnosis = '唐氏综合症' or second_diagnosis = '唐氏综合症' or third_diagnosis = '唐氏综合症');
+ select count(Child_name) into totaltable(27) from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and (first_diagnosis = '尿道下裂' or second_diagnosis = '尿道下裂' or third_diagnosis = '尿道下裂');
+ select count(Child_name) into totaltable(28) from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and (first_diagnosis = '先天性心脏病' or second_diagnosis = '先天性心脏病' or third_diagnosis = '先天性心脏病');
+ select count(Child_name) into totaltable(29) from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and (first_diagnosis = '膀胱外翻' or second_diagnosis = '膀胱外翻' or third_diagnosis = '膀胱外翻');
+ select count(Child_name) into totaltable(30) from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and (first_diagnosis = '其他' or second_diagnosis = '其他' or third_diagnosis = '其他');
+
+ 
+  total_name(1) := '无脑畸形';
+  total_name(2) := '马蹄内翻足左';
+  total_name(3) := '马蹄内翻足右';
+  total_name(4) := '脊柱裂';
+  total_name(5) := '多指左';
+  total_name(6) := '多指右';
+  total_name(7) := '脑膨出';
+  total_name(8) := '并指左';
+  total_name(9) := '并指右';
+  total_name(10) := '先天性脑积水';
+  total_name(11) := '左上肢缩短';
+  total_name(12) := '右上肢缩短';
+  total_name(13) := '左下肢缩短';
+  total_name(14) := '右下肢缩短';
+  total_name(15) := '腭裂';
+  total_name(16) := '唇裂';
+  total_name(17) := '唇裂合并腭裂';
+  total_name(18) := '先天性膈疝';
+  total_name(19) := '小耳(包括无耳)';
+  total_name(20) := '脐膨出';
+  total_name(21) := '外耳其他畸形';
+  total_name(22) := '腹烈';
+  total_name(23) := '食道闭锁或狭窄';
+  total_name(24) := '联体双胎';
+  total_name(25) := '直肠肛门闭锁或狭窄(包括无肛)';
+  total_name(26) := '唐氏综合症';
+  total_name(27) := '尿道下裂';
+  total_name(28) := '先天性心脏病';
+  total_name(29) := '膀胱外翻';
+  total_name(30) := '其他';
+
+--totaltable(2) := 2;
+--totaltable(1) := 1;
+--用选择排序，选出10个最大的数依次放入top10中
+--用嵌套循环
+  <<outer_1>>
+  for i in 1..10 loop
+  t := 1;
+    temp := totaltable(1);
+
+   --     t1 := t;
+  <<inter>>
+  for j in 1..30 loop
+    if totaltable(j) > temp then
+    temp := totaltable(j);
+    t := j;
+     end if;
+--a := a + 1;
+  end loop inter;
+  
+ -- 如果选不出新的缺陷，即表明缺陷小于10个或者没有数据，即全为0
+    if temp = 0 then
+  exit outer_1;
+  end if;
+    top10_num(i) := temp;
+  top10_name(i) := total_name(t);
+--  DELETE(x) 删除元素下标为x的元素，如果x为null，则集合保持不变 对VARRAY非法 
+ -- totaltable.delete(t);
+ -- total_name.delete(t);
+  totaltable(t) := 0;
+  total_name(t) := '';
+/****如果totaltable（1）为最小的数且缺陷小于10个 ****/ 
+      if t = 1 then  
+     a := a + 1;
+     else
+     a := 0;
+    end if;
+
+    if a = 2 then
+      exit outer_1;
+      end if;
+/***********************/
+-- 如果选不出新的缺陷，即表明缺陷小于10个，则跳出最外层循环
+   --   if t1 = t and t1 <> 1 then  
+   -- exit outer_1;
+   -- end if;
+
+  end loop outer_1;
+
+
+
+--top10_num(1) := 1;
+--top10_num(2) := 10;
+--top10_name(1) := 'asdasdas';
+--top10_name(2) := 'cccccb';
+
+
+  
+ -- top10_num(1) := a1;
+-- top10_num(1) := 1;
+
+end Search_History_DefectSort;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/****************************************************
+
+申明oracle复合数据类型，注意要逐行执行！
+
+***********************************************/
+
+
+
+create type T_Object as object(num integer,name_defect varchar(100));
+
+create type T_Table as table of T_Object;
+
+
+
+
+
+
+/****************************************************
+
+申明oracle包头（包含两个游标、两个存储过程）
+
+***********************************************/
+
+create or replace package yyc_package as
+type refcursor is ref CURSOR;
+type refcursor_2 is ref CURSOR;
+procedure Search_History_DefectAll_A(yearstart in varchar, yearend in varchar,all_cursor out refcursor, total out integer);
+procedure Search_History_DefectAll_7(yearstart in varchar, yearend in varchar,all_cursor_2 out refcursor_2, total out integer);
+end yyc_package;  
+
+
+
+
+
+
+
+
+/****************************************************
+
+包体部分：
+历年出生缺陷顺位统计的存储过程
+
+***********************************************/
+
+create or replace
+package body yyc_package
+is
+procedure Search_History_DefectAll_A(yearstart in varchar, yearend in varchar, all_cursor out refcursor, total out integer)
+is
+  totaltable totaldefect;
+  total_name totaldefect_name;
+  y_table T_Table;
+  num int := 0;
+  i int := 0;
+  j int := 0;
+  t int := 0;
+  temp int := 0;
+ -- a1 integer := 0;
+begin
+/*  totaltable := totaldefect();
+  top10_num := table_sort();*/
+  totaltable := totaldefect();
+  total_name := totaldefect_name();
+ totaltable.extend(30);
+ total_name.extend(30);
+ y_table := T_Table();
+ --oracle数组下标从1开始
+--嵌套表要初始化
+/* 使用集合之前必须要初始化，对于Index_by表初始化是自动进行的，但是对于嵌套表和VARRAY就必须使用内建的构造函数。
+如果重新调用，嵌套表和VARRAY自动置NULL，这不只是元素置NULL，而是整个集合置NULL。给集合内的元素赋值需要使用下标符号。
+将一个集合的值赋给另一个集合，只需要简单的使用赋值操作符。
+ */
+ for i in 1..30 loop
+  totaltable(i) := 0;
+ -- total_name(i) := '';
+ end loop;
+--totaltable(9) := 0;
+
+--统计本年度总数 主要要是缺陷儿（diagnosis_type = 2 or diagnosis_type = 3）！
+ select count(Child_name) into total from standard_child_view where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and shift = 3 and (diagnosis_type = 2 or diagnosis_type = 3);
+
+--oracle数组下标从1开始
+ select count(Child_name) into totaltable(1) from standard_child_view where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and shift = 3 and (first_diagnosis = '无脑畸形' or second_diagnosis = '无脑畸形' or third_diagnosis = '无脑畸形');
+ select count(Child_name) into totaltable(2) from standard_child_view where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and shift = 3 and (first_diagnosis = '马蹄内翻足左' or second_diagnosis = '马蹄内翻足左' or third_diagnosis = '马蹄内翻足左');
+ select count(Child_name) into totaltable(3) from standard_child_view where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and shift = 3 and (first_diagnosis = '马蹄内翻足右' or second_diagnosis = '马蹄内翻足右' or third_diagnosis = '马蹄内翻足右');
+ select count(Child_name) into totaltable(4) from standard_child_view where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and shift = 3 and (first_diagnosis = '脊柱裂' or second_diagnosis = '脊柱裂' or third_diagnosis = '脊柱裂');
+ select count(Child_name) into totaltable(5) from standard_child_view where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and shift = 3 and (first_diagnosis = '多指左' or second_diagnosis = '多指左' or third_diagnosis = '多指左');
+ select count(Child_name) into totaltable(6) from standard_child_view where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and shift = 3 and (first_diagnosis = '多指右' or second_diagnosis = '多指右' or third_diagnosis = '多指右');
+ select count(Child_name) into totaltable(7) from standard_child_view where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and shift = 3 and (first_diagnosis = '脑膨出' or second_diagnosis = '脑膨出' or third_diagnosis = '脑膨出');
+ select count(Child_name) into totaltable(8) from standard_child_view where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and shift = 3 and (first_diagnosis = '并指左' or second_diagnosis = '并指左' or third_diagnosis = '并指左');
+ select count(Child_name) into totaltable(9) from standard_child_view where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and shift = 3 and (first_diagnosis = '并指右' or second_diagnosis = '并指右' or third_diagnosis = '并指右');
+ select count(Child_name) into totaltable(10) from standard_child_view where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and shift = 3 and (first_diagnosis = '先天性脑积水' or second_diagnosis = '先天性脑积水' or third_diagnosis = '先天性脑积水');
+ select count(Child_name) into totaltable(11) from standard_child_view where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and shift = 3 and (first_diagnosis = '左上肢缩短' or second_diagnosis = '左上肢缩短' or third_diagnosis = '左上肢缩短');
+ select count(Child_name) into totaltable(12) from standard_child_view where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and shift = 3 and (first_diagnosis = '右上肢缩短' or second_diagnosis = '右上肢缩短' or third_diagnosis = '右上肢缩短');
+ select count(Child_name) into totaltable(13) from standard_child_view where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and shift = 3 and (first_diagnosis = '左下肢缩短' or second_diagnosis = '左下肢缩短' or third_diagnosis = '左下肢缩短');
+ select count(Child_name) into totaltable(14) from standard_child_view where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and shift = 3 and (first_diagnosis = '右下肢缩短' or second_diagnosis = '右下肢缩短' or third_diagnosis = '右下肢缩短');
+ select count(Child_name) into totaltable(15) from standard_child_view where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and shift = 3 and (first_diagnosis = '腭裂' or second_diagnosis = '腭裂' or third_diagnosis = '腭裂');
+ select count(Child_name) into totaltable(16) from standard_child_view where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and shift = 3 and (first_diagnosis = '唇裂' or second_diagnosis = '唇裂' or third_diagnosis = '唇裂');
+ select count(Child_name) into totaltable(17) from standard_child_view where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and shift = 3 and (first_diagnosis = '唇裂合并腭裂' or second_diagnosis = '唇裂合并腭裂' or third_diagnosis = '唇裂合并腭裂');
+ select count(Child_name) into totaltable(18) from standard_child_view where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and shift = 3 and (first_diagnosis = '先天性膈疝' or second_diagnosis = '先天性膈疝' or third_diagnosis = '先天性膈疝');
+ select count(Child_name) into totaltable(19) from standard_child_view where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and shift = 3 and (first_diagnosis = '小耳(包括无耳)' or second_diagnosis = '小耳(包括无耳)' or third_diagnosis = '小耳(包括无耳)');
+ select count(Child_name) into totaltable(20) from standard_child_view where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and shift = 3 and (first_diagnosis = '脐膨出' or second_diagnosis = '脐膨出' or third_diagnosis = '脐膨出');
+ select count(Child_name) into totaltable(21) from standard_child_view where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and shift = 3 and (first_diagnosis = '外耳其他畸形' or second_diagnosis = '外耳其他畸形' or third_diagnosis = '外耳其他畸形');
+ select count(Child_name) into totaltable(22) from standard_child_view where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and shift = 3 and (first_diagnosis = '腹烈' or second_diagnosis = '腹烈' or third_diagnosis = '腹烈');
+ select count(Child_name) into totaltable(23) from standard_child_view where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and shift = 3 and (first_diagnosis = '食道闭锁或狭窄' or second_diagnosis = '食道闭锁或狭窄' or third_diagnosis = '食道闭锁或狭窄');
+ select count(Child_name) into totaltable(24) from standard_child_view where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and shift = 3 and (first_diagnosis = '联体双胎' or second_diagnosis = '联体双胎' or third_diagnosis = '联体双胎');
+ select count(Child_name) into totaltable(25) from standard_child_view where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and shift = 3 and (first_diagnosis = '直肠肛门闭锁或狭窄(包括无肛)' or second_diagnosis = '直肠肛门闭锁或狭窄(包括无肛)' or third_diagnosis = '直肠肛门闭锁或狭窄(包括无肛)');
+ select count(Child_name) into totaltable(26) from standard_child_view where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and shift = 3 and (first_diagnosis = '唐氏综合症' or second_diagnosis = '唐氏综合症' or third_diagnosis = '唐氏综合症');
+ select count(Child_name) into totaltable(27) from standard_child_view where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and shift = 3 and (first_diagnosis = '尿道下裂' or second_diagnosis = '尿道下裂' or third_diagnosis = '尿道下裂');
+ select count(Child_name) into totaltable(28) from standard_child_view where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and shift = 3 and (first_diagnosis = '先天性心脏病' or second_diagnosis = '先天性心脏病' or third_diagnosis = '先天性心脏病');
+ select count(Child_name) into totaltable(29) from standard_child_view where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and shift = 3 and (first_diagnosis = '膀胱外翻' or second_diagnosis = '膀胱外翻' or third_diagnosis = '膀胱外翻');
+ select count(Child_name) into totaltable(30) from standard_child_view where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and shift = 3 and (first_diagnosis = '其他' or second_diagnosis = '其他' or third_diagnosis = '其他');
+
+ 
+  total_name(1) := '无脑畸形';
+  total_name(2) := '马蹄内翻足左';
+  total_name(3) := '马蹄内翻足右';
+  total_name(4) := '脊柱裂';
+  total_name(5) := '多指左';
+  total_name(6) := '多指右';
+  total_name(7) := '脑膨出';
+  total_name(8) := '并指左';
+  total_name(9) := '并指右';
+  total_name(10) := '先天性脑积水';
+  total_name(11) := '左上肢缩短';
+  total_name(12) := '右上肢缩短';
+  total_name(13) := '左下肢缩短';
+  total_name(14) := '右下肢缩短';
+  total_name(15) := '腭裂';
+  total_name(16) := '唇裂';
+  total_name(17) := '唇裂合并腭裂';
+  total_name(18) := '先天性膈疝';
+  total_name(19) := '小耳(包括无耳)';
+  total_name(20) := '脐膨出';
+  total_name(21) := '外耳其他畸形';
+  total_name(22) := '腹烈';
+  total_name(23) := '食道闭锁或狭窄';
+  total_name(24) := '联体双胎';
+  total_name(25) := '直肠肛门闭锁或狭窄(包括无肛)';
+  total_name(26) := '唐氏综合症';
+  total_name(27) := '尿道下裂';
+  total_name(28) := '先天性心脏病';
+  total_name(29) := '膀胱外翻';
+  total_name(30) := '其他';
+
+y_table.extend;
+y_table(1) := T_Object(totaltable(1), total_name(1));
+y_table.extend;
+y_table(2) := T_Object(totaltable(2), total_name(2));
+y_table.extend;
+y_table(3) := T_Object(totaltable(3), total_name(3));
+y_table.extend;
+y_table(4) := T_Object(totaltable(4), total_name(4));
+y_table.extend;
+y_table(5) := T_Object(totaltable(5), total_name(5));
+y_table.extend;
+y_table(6) := T_Object(totaltable(6), total_name(6));
+y_table.extend;
+y_table(7) := T_Object(totaltable(7), total_name(7));
+y_table.extend;
+y_table(8) := T_Object(totaltable(8), total_name(8));
+y_table.extend;
+y_table(9) := T_Object(totaltable(9), total_name(9));
+y_table.extend;
+y_table(10) := T_Object(totaltable(10), total_name(10));
+y_table.extend;
+y_table(11) := T_Object(totaltable(11), total_name(11));
+y_table.extend;
+y_table(12) := T_Object(totaltable(12), total_name(12));
+y_table.extend;
+y_table(13) := T_Object(totaltable(13), total_name(13));
+y_table.extend;
+y_table(14) := T_Object(totaltable(14), total_name(14));
+y_table.extend;
+y_table(15) := T_Object(totaltable(15), total_name(15));
+y_table.extend;
+y_table(16) := T_Object(totaltable(16), total_name(16));
+y_table.extend;
+y_table(17) := T_Object(totaltable(17), total_name(17));
+y_table.extend;
+y_table(18) := T_Object(totaltable(18), total_name(18));
+y_table.extend;
+y_table(19) := T_Object(totaltable(19), total_name(19));
+y_table.extend;
+y_table(20) := T_Object(totaltable(20), total_name(20));
+y_table.extend;
+y_table(21) := T_Object(totaltable(21), total_name(21));
+y_table.extend;
+y_table(22) := T_Object(totaltable(22), total_name(22));
+y_table.extend;
+y_table(23) := T_Object(totaltable(23), total_name(23));
+y_table.extend;
+y_table(24) := T_Object(totaltable(24), total_name(24));
+y_table.extend;
+y_table(25) := T_Object(totaltable(25), total_name(25));
+y_table.extend;
+y_table(26) := T_Object(totaltable(26), total_name(26));
+y_table.extend;
+y_table(27) := T_Object(totaltable(27), total_name(27));
+y_table.extend;
+y_table(28) := T_Object(totaltable(28), total_name(28));
+y_table.extend;
+y_table(29) := T_Object(totaltable(29), total_name(29));
+y_table.extend;
+y_table(30) := T_Object(totaltable(30), total_name(30));
+
+open all_cursor for select * from table(cast(y_table as T_Table));
+
+end Search_History_DefectAll_A;
+
+procedure Search_History_DefectAll_7(yearstart in varchar, yearend in varchar, all_cursor_2 out refcursor_2, total out integer)
+is
+  totaltable totaldefect;
+  total_name totaldefect_name;
+  y_table T_Table;
+  num int := 0;
+  i int := 0;
+  j int := 0;
+  t int := 0;
+  temp int := 0;
+ -- a1 integer := 0;
+begin
+/*  totaltable := totaldefect();
+  top10_num := table_sort();*/
+  totaltable := totaldefect();
+  total_name := totaldefect_name();
+ totaltable.extend(30);
+ total_name.extend(30);
+ y_table := T_Table();
+ --oracle数组下标从1开始
+--嵌套表要初始化
+/* 使用集合之前必须要初始化，对于Index_by表初始化是自动进行的，但是对于嵌套表和VARRAY就必须使用内建的构造函数。
+如果重新调用，嵌套表和VARRAY自动置NULL，这不只是元素置NULL，而是整个集合置NULL。给集合内的元素赋值需要使用下标符号。
+将一个集合的值赋给另一个集合，只需要简单的使用赋值操作符。
+ */
+ for i in 1..30 loop
+  totaltable(i) := 0;
+ -- total_name(i) := '';
+ end loop;
+--totaltable(9) := 0;
+
+--统计本年度总数 主要要是缺陷儿（diagnosis_type = 2 or diagnosis_type = 3）！
+ select count(Child_name) into total from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and regexp_like(diagnosis_age,'生后0+岁0+月0*[0-7]天') and (diagnosis_type = 2 or diagnosis_type = 3);
+
+--oracle数组下标从1开始
+ select count(Child_name) into totaltable(1) from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and regexp_like(diagnosis_age,'生后0+岁0+月0*[0-7]天') and (first_diagnosis = '无脑畸形' or second_diagnosis = '无脑畸形' or third_diagnosis = '无脑畸形');
+ select count(Child_name) into totaltable(2) from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and regexp_like(diagnosis_age,'生后0+岁0+月0*[0-7]天') and (first_diagnosis = '马蹄内翻足左' or second_diagnosis = '马蹄内翻足左' or third_diagnosis = '马蹄内翻足左');
+ select count(Child_name) into totaltable(3) from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and regexp_like(diagnosis_age,'生后0+岁0+月0*[0-7]天') and (first_diagnosis = '马蹄内翻足右' or second_diagnosis = '马蹄内翻足右' or third_diagnosis = '马蹄内翻足右');
+ select count(Child_name) into totaltable(4) from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and regexp_like(diagnosis_age,'生后0+岁0+月0*[0-7]天') and (first_diagnosis = '脊柱裂' or second_diagnosis = '脊柱裂' or third_diagnosis = '脊柱裂');
+ select count(Child_name) into totaltable(5) from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and regexp_like(diagnosis_age,'生后0+岁0+月0*[0-7]天') and (first_diagnosis = '多指左' or second_diagnosis = '多指左' or third_diagnosis = '多指左');
+ select count(Child_name) into totaltable(6) from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and regexp_like(diagnosis_age,'生后0+岁0+月0*[0-7]天') and (first_diagnosis = '多指右' or second_diagnosis = '多指右' or third_diagnosis = '多指右');
+ select count(Child_name) into totaltable(7) from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and regexp_like(diagnosis_age,'生后0+岁0+月0*[0-7]天') and (first_diagnosis = '脑膨出' or second_diagnosis = '脑膨出' or third_diagnosis = '脑膨出');
+ select count(Child_name) into totaltable(8) from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and regexp_like(diagnosis_age,'生后0+岁0+月0*[0-7]天') and (first_diagnosis = '并指左' or second_diagnosis = '并指左' or third_diagnosis = '并指左');
+ select count(Child_name) into totaltable(9) from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and regexp_like(diagnosis_age,'生后0+岁0+月0*[0-7]天') and (first_diagnosis = '并指右' or second_diagnosis = '并指右' or third_diagnosis = '并指右');
+ select count(Child_name) into totaltable(10) from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and regexp_like(diagnosis_age,'生后0+岁0+月0*[0-7]天') and (first_diagnosis = '先天性脑积水' or second_diagnosis = '先天性脑积水' or third_diagnosis = '先天性脑积水');
+ select count(Child_name) into totaltable(11) from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and regexp_like(diagnosis_age,'生后0+岁0+月0*[0-7]天') and (first_diagnosis = '左上肢缩短' or second_diagnosis = '左上肢缩短' or third_diagnosis = '左上肢缩短');
+ select count(Child_name) into totaltable(12) from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and regexp_like(diagnosis_age,'生后0+岁0+月0*[0-7]天') and (first_diagnosis = '右上肢缩短' or second_diagnosis = '右上肢缩短' or third_diagnosis = '右上肢缩短');
+ select count(Child_name) into totaltable(13) from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and regexp_like(diagnosis_age,'生后0+岁0+月0*[0-7]天') and (first_diagnosis = '左下肢缩短' or second_diagnosis = '左下肢缩短' or third_diagnosis = '左下肢缩短');
+ select count(Child_name) into totaltable(14) from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and regexp_like(diagnosis_age,'生后0+岁0+月0*[0-7]天') and (first_diagnosis = '右下肢缩短' or second_diagnosis = '右下肢缩短' or third_diagnosis = '右下肢缩短');
+ select count(Child_name) into totaltable(15) from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and regexp_like(diagnosis_age,'生后0+岁0+月0*[0-7]天') and (first_diagnosis = '腭裂' or second_diagnosis = '腭裂' or third_diagnosis = '腭裂');
+ select count(Child_name) into totaltable(16) from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and regexp_like(diagnosis_age,'生后0+岁0+月0*[0-7]天') and (first_diagnosis = '唇裂' or second_diagnosis = '唇裂' or third_diagnosis = '唇裂');
+ select count(Child_name) into totaltable(17) from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and regexp_like(diagnosis_age,'生后0+岁0+月0*[0-7]天') and (first_diagnosis = '唇裂合并腭裂' or second_diagnosis = '唇裂合并腭裂' or third_diagnosis = '唇裂合并腭裂');
+ select count(Child_name) into totaltable(18) from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and regexp_like(diagnosis_age,'生后0+岁0+月0*[0-7]天') and (first_diagnosis = '先天性膈疝' or second_diagnosis = '先天性膈疝' or third_diagnosis = '先天性膈疝');
+ select count(Child_name) into totaltable(19) from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and regexp_like(diagnosis_age,'生后0+岁0+月0*[0-7]天') and (first_diagnosis = '小耳(包括无耳)' or second_diagnosis = '小耳(包括无耳)' or third_diagnosis = '小耳(包括无耳)');
+ select count(Child_name) into totaltable(20) from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and regexp_like(diagnosis_age,'生后0+岁0+月0*[0-7]天') and (first_diagnosis = '脐膨出' or second_diagnosis = '脐膨出' or third_diagnosis = '脐膨出');
+ select count(Child_name) into totaltable(21) from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and regexp_like(diagnosis_age,'生后0+岁0+月0*[0-7]天') and (first_diagnosis = '外耳其他畸形' or second_diagnosis = '外耳其他畸形' or third_diagnosis = '外耳其他畸形');
+ select count(Child_name) into totaltable(22) from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and regexp_like(diagnosis_age,'生后0+岁0+月0*[0-7]天') and (first_diagnosis = '腹烈' or second_diagnosis = '腹烈' or third_diagnosis = '腹烈');
+ select count(Child_name) into totaltable(23) from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and regexp_like(diagnosis_age,'生后0+岁0+月0*[0-7]天') and (first_diagnosis = '食道闭锁或狭窄' or second_diagnosis = '食道闭锁或狭窄' or third_diagnosis = '食道闭锁或狭窄');
+ select count(Child_name) into totaltable(24) from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and regexp_like(diagnosis_age,'生后0+岁0+月0*[0-7]天') and (first_diagnosis = '联体双胎' or second_diagnosis = '联体双胎' or third_diagnosis = '联体双胎');
+ select count(Child_name) into totaltable(25) from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and regexp_like(diagnosis_age,'生后0+岁0+月0*[0-7]天') and (first_diagnosis = '直肠肛门闭锁或狭窄(包括无肛)' or second_diagnosis = '直肠肛门闭锁或狭窄(包括无肛)' or third_diagnosis = '直肠肛门闭锁或狭窄(包括无肛)');
+ select count(Child_name) into totaltable(26) from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and regexp_like(diagnosis_age,'生后0+岁0+月0*[0-7]天') and (first_diagnosis = '唐氏综合症' or second_diagnosis = '唐氏综合症' or third_diagnosis = '唐氏综合症');
+ select count(Child_name) into totaltable(27) from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and regexp_like(diagnosis_age,'生后0+岁0+月0*[0-7]天') and (first_diagnosis = '尿道下裂' or second_diagnosis = '尿道下裂' or third_diagnosis = '尿道下裂');
+ select count(Child_name) into totaltable(28) from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and regexp_like(diagnosis_age,'生后0+岁0+月0*[0-7]天') and (first_diagnosis = '先天性心脏病' or second_diagnosis = '先天性心脏病' or third_diagnosis = '先天性心脏病');
+ select count(Child_name) into totaltable(29) from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and regexp_like(diagnosis_age,'生后0+岁0+月0*[0-7]天') and (first_diagnosis = '膀胱外翻' or second_diagnosis = '膀胱外翻' or third_diagnosis = '膀胱外翻');
+ select count(Child_name) into totaltable(30) from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and regexp_like(diagnosis_age,'生后0+岁0+月0*[0-7]天') and (first_diagnosis = '其他' or second_diagnosis = '其他' or third_diagnosis = '其他');
+
+ 
+  total_name(1) := '无脑畸形';
+  total_name(2) := '马蹄内翻足左';
+  total_name(3) := '马蹄内翻足右';
+  total_name(4) := '脊柱裂';
+  total_name(5) := '多指左';
+  total_name(6) := '多指右';
+  total_name(7) := '脑膨出';
+  total_name(8) := '并指左';
+  total_name(9) := '并指右';
+  total_name(10) := '先天性脑积水';
+  total_name(11) := '左上肢缩短';
+  total_name(12) := '右上肢缩短';
+  total_name(13) := '左下肢缩短';
+  total_name(14) := '右下肢缩短';
+  total_name(15) := '腭裂';
+  total_name(16) := '唇裂';
+  total_name(17) := '唇裂合并腭裂';
+  total_name(18) := '先天性膈疝';
+  total_name(19) := '小耳(包括无耳)';
+  total_name(20) := '脐膨出';
+  total_name(21) := '外耳其他畸形';
+  total_name(22) := '腹烈';
+  total_name(23) := '食道闭锁或狭窄';
+  total_name(24) := '联体双胎';
+  total_name(25) := '直肠肛门闭锁或狭窄(包括无肛)';
+  total_name(26) := '唐氏综合症';
+  total_name(27) := '尿道下裂';
+  total_name(28) := '先天性心脏病';
+  total_name(29) := '膀胱外翻';
+  total_name(30) := '其他';
+
+y_table.extend;
+y_table(1) := T_Object(totaltable(1), total_name(1));
+y_table.extend;
+y_table(2) := T_Object(totaltable(2), total_name(2));
+y_table.extend;
+y_table(3) := T_Object(totaltable(3), total_name(3));
+y_table.extend;
+y_table(4) := T_Object(totaltable(4), total_name(4));
+y_table.extend;
+y_table(5) := T_Object(totaltable(5), total_name(5));
+y_table.extend;
+y_table(6) := T_Object(totaltable(6), total_name(6));
+y_table.extend;
+y_table(7) := T_Object(totaltable(7), total_name(7));
+y_table.extend;
+y_table(8) := T_Object(totaltable(8), total_name(8));
+y_table.extend;
+y_table(9) := T_Object(totaltable(9), total_name(9));
+y_table.extend;
+y_table(10) := T_Object(totaltable(10), total_name(10));
+y_table.extend;
+y_table(11) := T_Object(totaltable(11), total_name(11));
+y_table.extend;
+y_table(12) := T_Object(totaltable(12), total_name(12));
+y_table.extend;
+y_table(13) := T_Object(totaltable(13), total_name(13));
+y_table.extend;
+y_table(14) := T_Object(totaltable(14), total_name(14));
+y_table.extend;
+y_table(15) := T_Object(totaltable(15), total_name(15));
+y_table.extend;
+y_table(16) := T_Object(totaltable(16), total_name(16));
+y_table.extend;
+y_table(17) := T_Object(totaltable(17), total_name(17));
+y_table.extend;
+y_table(18) := T_Object(totaltable(18), total_name(18));
+y_table.extend;
+y_table(19) := T_Object(totaltable(19), total_name(19));
+y_table.extend;
+y_table(20) := T_Object(totaltable(20), total_name(20));
+y_table.extend;
+y_table(21) := T_Object(totaltable(21), total_name(21));
+y_table.extend;
+y_table(22) := T_Object(totaltable(22), total_name(22));
+y_table.extend;
+y_table(23) := T_Object(totaltable(23), total_name(23));
+y_table.extend;
+y_table(24) := T_Object(totaltable(24), total_name(24));
+y_table.extend;
+y_table(25) := T_Object(totaltable(25), total_name(25));
+y_table.extend;
+y_table(26) := T_Object(totaltable(26), total_name(26));
+y_table.extend;
+y_table(27) := T_Object(totaltable(27), total_name(27));
+y_table.extend;
+y_table(28) := T_Object(totaltable(28), total_name(28));
+y_table.extend;
+y_table(29) := T_Object(totaltable(29), total_name(29));
+y_table.extend;
+y_table(30) := T_Object(totaltable(30), total_name(30));
+
+open all_cursor_2 for select * from table(cast(y_table as T_Table));
+
+end Search_History_DefectAll_7;
+end yyc_package;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/****************************************************
+
+申明oracle复合数据类型，注意要逐行执行！
+
+***********************************************/
+
+
+create or replace
+type T_Object_2 as object(name_county varchar2(50),num_1 number,num_2 number,num_3 number,num_defect_total number,num_defect_abortion number,num_defect_7 number,num_defect_8 number,num_defect_null number,num_disabled_defect number,num_disabled number);
+
+
+create type T_Table_2 as table of T_Object_2;
+
+
+/****************************************************
+
+申明包头（一个游标、一个存储过程）
+
+***********************************************/
+
+create or replace package yyc_package_2 as
+type refcursor is ref CURSOR;
+procedure Search_Children_Sick_Info(yearstart in varchar2, yearend in varchar2,all_cursor out refcursor);
+end yyc_package_2;  
+
+
+
+
+/****************************************************
+
+包体部分：
+患儿病历信息统计的存储过程
+
+***********************************************/
+
+create or replace
+package body yyc_package_2
+as
+procedure Search_Children_Sick_Info(yearstart in varchar2, yearend in varchar2, all_cursor out refcursor)
+is
+--按county.init升序
+  cursor county_cursor is select county_name from county order by county.init;
+  y_table T_Table_2;
+--改为50
+  county_name varchar2(50) := '';
+  county_name_temp varchar2(50) := '';
+  i number default 1;
+  num_1 number default 0;
+  num_1_more number default 0;
+  num_2 number default 0;
+  num_3 number default 0;
+  num_defect_total number default 0;
+  num_defect_abortion number default 0;
+  num_defect_7 number default 0;
+  num_defect_8 number default 0;
+  num_defect_null number default 0;
+  num_disabled_defect number default 0;
+  num_disabled number default 0;
+begin
+ y_table := T_Table_2();
+  open county_cursor;
+  loop
+  fetch county_cursor into county_name;
+  county_name_temp := substr(county_name,1,2);
+  exit when county_cursor %notfound;
+  
+--修改
+  select count(child_name) into num_1 from child_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and substr(info_come,1,2) = county_name_temp;
+  select count(Child_name) into num_1_more from standard_sick_info temp where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and substr(info_come,1,2) = county_name_temp and not exists(select temp_2.group_num from child_sick_info temp_2 where temp_2.group_num = temp.group_num and temp_2.Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and temp_2.Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss'));
+  
+  num_1 := num_1 + num_1_more;
+  
+  select count(Child_name) into num_2 from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and substr(info_come,1,2) = county_name_temp;
+  select count(Child_name) into num_3 from child_feedback where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and substr(info_come,1,2) = county_name_temp;
+--治疗性引产
+  select count(child_name) into num_defect_abortion from standard_child_view where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and substr(info_come,1,2) = county_name_temp and shift = 3 and (diagnosis_type = 2 or diagnosis_type = 3);
+--<=7天
+  select count(child_name) into num_defect_7 from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and substr(info_come,1,2) = county_name_temp and regexp_like(diagnosis_age,'生后0+岁0+月0*[0-7]天') and (diagnosis_type = 2 or diagnosis_type = 3);
+--大于7天
+  select count(child_name) into num_defect_8 from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and substr(info_come,1,2) = county_name_temp and regexp_like(diagnosis_age,'[^生后0+岁0+月0*[0-7]天]') and (diagnosis_type = 2 or diagnosis_type = 3);
+--年龄不详
+  select count(child_name) into num_defect_null from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and substr(info_come,1,2) = county_name_temp and (diagnosis_age is null) and (diagnosis_type = 2 or diagnosis_type = 3);
+--残疾+缺陷
+  select count(child_name) into num_disabled_defect from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and substr(info_come,1,2) = county_name_temp and diagnosis_type = 3;
+--单纯残疾
+  select count(child_name) into num_disabled from standard_sick_info where Add_time >= to_date(yearstart,'yyyy-mm-dd hh24:mi:ss') and Add_time <= to_date(yearend,'yyyy-mm-dd hh24:mi:ss') and substr(info_come,1,2) = county_name_temp and diagnosis_type = 1;
+--出生缺陷总计
+num_defect_total := num_defect_abortion + num_defect_7 + num_defect_8 + num_defect_null;
+
+y_table.extend;
+y_table(i) := T_Object_2(county_name, num_1, num_2, num_3, num_defect_total, num_defect_abortion, num_defect_7, num_defect_8, num_defect_null, num_disabled_defect, num_disabled);
+
+i := i + 1;
+end loop;
+close county_cursor;
+open all_cursor for select * from table(cast(y_table as T_Table_2));
+
+end Search_Children_Sick_Info;
+end yyc_package_2;
+
+
+
+
+
+
+
+
+
+
+
+

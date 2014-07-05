@@ -1,0 +1,191 @@
+所有
+
+1、命名原则
+	
+	重点词放在最前面，组合词用“_”分开。如：
+“Index_Admin”
+
+“Login_Admin”
+
+
+
+
+Javascript
+
+
+
+1、注释
+
+（1）“//*”
+	表示一级小标题
+	"//**"
+	表示二级小标题
+
+	。。。以此类推
+
+（2）“//?”
+	表示未确定的，需要修改或补充的内容
+
+（3）方法注释中，一行代码后出现“//”表示输出结果。如：
+
+        /*  对每个数组元素调用iterator，返回调用iterator返回false的元素索引的数组 
+        如 source_arr = ["", "a", "b", ""];
+        result = operate.Judge(arr, function (value, index) {
+        if (value === "") {
+        return false;
+        }
+        else {
+        return true;
+        }
+        });
+        //result = [0, 3];
+        */
+
+	 表述结果为“result = [0, 3];”
+
+2、序号
+序号都是从0开始，0为第一个。
+
+
+3、类的方法、属性
+
+方法：
+	//首字母大写，如"MyName"。
+
+	非构造函数，首字母小写，如“myName”
+
+	私有方法加前缀“_”，保护方法加前缀“P_”。
+
+	使用动词或动词+名词命名。
+	
+
+
+
+属性：
+
+	首字母小写，如“myName”
+
+	私有属性加前缀“_”，保护属性加前缀“P_”。	
+
+
+4、类名
+
+	首字母大写。
+
+
+
+5、参数
+
+（1）函数中定义与形参同名的变量，前面加“_”。如：
+
+	function A(args){
+	var _args = null;
+
+	...
+}
+
+
+
+6、文件
+
+	js文件名：
+
+		如果该.js文件中定义了一个类，则以大写开头。如：
+
+		Index.js
+
+		Operate_Boss.js
+
+
+		如果该.js文件中不是定义了一个类（如var t = {}；或者定义了一个实例等），则以小写开头。如：
+
+		index.js
+
+		operate_boss.js
+
+
+
+	js文件包名：
+
+		以小写开头。如：
+	
+		index
+
+		operate_boss
+
+	
+
+
+7、接口以I开头。
+
+//抽象类以A开头
+
+
+接口、抽象类首字母大写。如：
+
+IIterator（接口）
+Layer（抽象类）
+
+
+
+8、命名空间大写。如：
+
+	YYC.Tool
+
+9、全局变量全部大写。如：
+
+	SIZE
+
+10、构造函数名大写。如：
+
+	Init
+
+
+11、事件句柄都小写。如：
+
+	onload
+	onclick
+
+
+
+
+
+C#
+
+1、Session的key小写开头，如：
+	Session["userName"]
+
+
+2、ViewData的key大写开头，如：
+	ViewData["Data"]
+
+
+
+
+
+
+Asp.net MVC
+
+
+1、文件包名大写，Scripts中的文件包、js文件包的名称小写。如：
+
+	Content -> Css
+
+	Scripts -> bomber
+
+	jquery-1.7.js
+
+
+
+2、Content中的资源名小写。如：
+
+	Content -> Css -> index.css
+	Content -> Image ->　index.jpg
+
+
+3、项目名大写。如：
+
+	Help
+	JavascriptTest
+
+

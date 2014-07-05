@@ -1,0 +1,148 @@
+今日计划：
+
+1、显示地图（空地、砖墙）。
+
+2、重构架构、代码。
+
+
+
+
+
+
+
+
+完成内容：
+
+
+
+
+增加了jsLoader控件。
+
+将showMap该名为Game类。
+
+将Game类中的init分出来成为main.js。
+
+在测试时，先调用main.init预加载图片，然后延迟测试。
+
+修改了oopFrame.js
+
+
+
+
+
+
+
+
+明日计划：
+
+
+
+
+
+
+
+难点：
+
+
+
+
+
+
+
+
+已解决的问题及解决方案：
+
+1、在单元测试中，如何等待图片预加载完成后，再进行showMap.onload测试（我想先延迟一段时间（等待预加载完成），然后测试onload；而不是在onload的测试中的每个it都进行延迟测试！）？
+
+
+解决方案
+
+对jasmine进行延迟测试。
+
+具体代码如下：
+SpecRunner.aspx：
+<script type="text/javascript">
+      (function () {
+//图片预加载
+          main.init()
+
+          //清除“main.init()”创建的多余html元素
+          function clear() {
+              $("body").children().not("script").remove();
+          };
+
+
+
+
+          var jasmineEnv = jasmine.getEnv();
+          jasmineEnv.updateInterval = 1000;
+
+          var htmlReporter = new jasmine.HtmlReporter();
+
+          jasmineEnv.addReporter(htmlReporter);
+
+          jasmineEnv.specFilter = function (spec) {
+              return htmlReporter.specFilter(spec);
+          };
+
+          var currentWindowOnload = window.onload;
+
+ 
+          //延迟1s执行测试（等待预加载完后执行）
+          setTimeout(function () {
+              clear();
+
+              if (currentWindowOnload) {
+                  currentWindowOnload();
+              }
+              execJasmine();
+          }, 1000);
+
+          function execJasmine() {
+              jasmineEnv.execute();
+          }
+
+      })();
+  </script>
+
+
+
+
+
+
+
+
+已解决但不知道原因的问题：
+
+
+
+
+
+
+
+
+未解决的问题：
+
+
+
+
+
+
+
+
+
+注意事项：
+
+
+
+
+
+
+
+
+
+
+补充说明：
+
+1、jasmine的spyOn监视的函数不真的执行！
+

@@ -1,0 +1,10 @@
+构造html字符串等方法，或者属于建造模式的构造方法，一律以build开头。如：buildHtml
+
+
+命名
+	框架式的工具的js和css均以“Y”开头。如：YTool、YOOP等
+
+	一般的控件的js和css则不以“Y”开头。如：Select、Validator等
+
+
+
